@@ -22,8 +22,7 @@ model User {
   updatedAt         DateTime?  @map("updated_at")
   isDeleted         Boolean    @default(false) @map("is_deleted")
   deletedAt         DateTime?      @map("deleted_at")
-  receivedMessages  Message[]     @relation("receivedMessage")
-  createdMessages   Message[]     @relation("createdMessage")
+  messages          Message[]
   contacts          Contact[]     @relation("hasContact")
   contactBy         Contact[]     @relation("isContact")
   groups            UserGroup[]   @relation("isParticipant")
@@ -38,6 +37,8 @@ model Contact {
   person            User        @relation("isContact", fields: [personId], references: [id], onDelete: Cascade)        
   ownerId           String      @map("owner_id") //@db.Uuid
   owner             User        @relation("hasContact", fields: [ownerId], references: [id], onDelete: Cascade)
+  chatRoomId        String?     @map("chat_room_id") //@db.Uuid
+  chatRoom          ChatRoom?   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   createdAt         DateTime   @map("created_at")
   updatedAt         DateTime?  @map("updated_at")
   isDeleted         Boolean    @default(false) @map("is_deleted")
@@ -46,17 +47,22 @@ model Contact {
   @@map("contacts")
 }
 
+enum ChatRoomType {
+  DUAL
+  GROUP
+  @@map("chat_room_type")
+}
 
 model Group {
   id                  String             @id //@default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chatRoomId          String?             @unique @map("chat_room_id") //@db.Uuid
   name                String  
-  profilePicUrl       String?         @unique @map("profile_pic_url")
+  profilePicUrl       String         @unique @map("profile_pic_url")
+  users               UserGroup[]    @relation("hasParticipant")
+  chatRoom            ChatRoom?       @relation(fields: [chatRoomId], references: [id], onDelete: SetNull)
   createdAt           DateTime       @map("created_at")
   updatedAt           DateTime?      @map("updated_at")
   isDeleted           Boolean        @default(false) @map("is_deleted")
-  deletedAt         DateTime?      @map("deleted_at")
-  messages            Message[]     @relation("groupMessage")
-  users               UserGroup[]    @relation("hasParticipant")
   @@map("groups")
 }
 
@@ -76,25 +82,33 @@ model UserGroup {
   createdAt           DateTime        @map("created_at")
   updatedAt           DateTime?       @map("updated_at")
   isDeleted           Boolean         @default(false) @map("is_deleted")
-  deletedAt         DateTime?      @map("deleted_at")
   @@map("user_group")
+}
+
+model ChatRoom {
+  id                  String          @id //@default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chatRoomType                        ChatRoomType @map("chat_room_type")
+  createdAt           DateTime        @map("created_at")
+  updatedAt           DateTime?       @map("updated_at")
+  isDeleted           Boolean         @default(false) @map("is_deleted")
+  messages            Message[]
+  contacts            Contact[] 
+  group               Group?
+  @@map("chat_rooms")
 }
 
 model Message {
   id                  String          @id //@default(dbgenerated("gen_random_uuid()")) @db.Uuid
   textContent         String          @map("text_content")
-  authorId            String          @map("author_id") //@db.Uuid
-  receiverId          String?          @map("receiver_id")
-  groupId             String?          @map("group_id")
+  authorId            String?         @map("authour_id") //@db.Uuid
+  chatRoomId          String?         @map("chat_room_id") //@db.Uuid
   sent                Boolean         @default(false)
   received            Boolean         @default(false)
   read                Boolean         @default(false)
   createdAt           DateTime        @map("created_at")
   updatedAt           DateTime?       @map("updated_at")
   isDeleted           Boolean         @default(false) @map("is_deleted")
-  deletedAt           DateTime?         @map("deleted_at")
-  author              User?           @relation("createdMessage", fields: [authorId], references: [id])
-  receiver            User?            @relation("receivedMessage", fields: [receiverId], references: [id])
-  group               Group?          @relation("groupMessage", fields: [groupId], references: [id])
+  author              User?           @relation(fields: [authorId], references: [id])
+  chatRoom            ChatRoom?       @relation(fields: [chatRoomId], references: [id])
   @@map("messages")
 }

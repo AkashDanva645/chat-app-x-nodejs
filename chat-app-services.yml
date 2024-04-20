@@ -1,0 +1,24 @@
+version: "1.0"
+
+services:
+  web_server:
+    build: .
+    ports:
+      - 3001:3001
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@chat_app_database:5432/chat-app
+    depends_on:
+      - "chat_app_database"
+  
+  chat_app_database:
+    image: postgres:14.5
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - database_volume:/var/lib/postgres
+
+volumes:
+  database_volume:
+    external: true

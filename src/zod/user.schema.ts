@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { uuidSchema, dateSchema } from "./sharedSchema";
 
-const usernameSchema = z.string().refine(val => {
+export const usernameSchema = z.string().refine(val => {
     if (val.length > 30) return false;
     if (!(/^[a-zA-Z0-9]+$/.test(val))) return false;
     return true;
@@ -8,7 +9,7 @@ const usernameSchema = z.string().refine(val => {
     message: "username should only contain alphanumeric characters and must be less than 30 characters long"
 });
 
-const emailSchema = z.string().email("Provided email has invalid format.");
+export const emailSchema = z.string().email("Provided email has invalid format.");
 
 const aliasSchema = z.string();
 
@@ -26,9 +27,9 @@ const lastnameSchema = z.string().refine((val: string) => {
     message: "lastname can only contain letters."
 })
 
-const passwordSchema = z.string();
+export const passwordSchema = z.string();
 
-const phoneNumberSchema = z.string().refine(val => val.length === 10, {
+export const phoneNumberSchema = z.string().refine(val => val.length === 10, {
     message: 'Phone Number must be of exactly 10 characters long'
 });
 
@@ -36,13 +37,11 @@ const bioSchema = z.string();
 
 const profilePicUrlSchema = z.string();
 
-const dateSchema = z.date();
 
-const userIdSchema = z.string();
 
 // Persistent User
 export const UserSchema = z.object({
-    id: userIdSchema,
+    id: uuidSchema,
     username: usernameSchema,
     email: emailSchema,
     alias: aliasSchema,
@@ -79,30 +78,7 @@ export const UpdateUserSchema = CreateUserSchema.partial();
 
 export type UpdateUserDTO = z.infer<typeof UpdateUserSchema>
 
-export const UserSignUpSchema = CreateUserSchema.extend({
-    passwordConfirm: passwordSchema
-});
 
-export type UserSignUpDTO = z.infer<typeof UserSignUpSchema>
-
-export const SignedUpUserSchema = CreateUserSchema.omit({
-    password: true,
-    bio: true,
-    profilePicUrl: true
-});
-
-export type SignedUpUserDTO = z.infer<typeof SignedUpUserSchema>
-
-export const UserCredsSchema = UserSchema.pick({
-    username: true,
-    emai: true,
-    password: true
-}).extend({
-    username: usernameSchema.optional(),
-    email: emailSchema.optional()
-});
-
-export type UserCredsDTO = z.infer<typeof UserCredsSchema>
 
 
 export default UserSchema;
