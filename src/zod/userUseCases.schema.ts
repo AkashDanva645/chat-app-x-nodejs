@@ -68,3 +68,5 @@ export const UserCreatesContactSchema = ContactSchema.pick({
 });
 
 export type UserCreatesContactDTO = z.infer<typeof UserCreatesContactSchema>
+
+// ahahah
